@@ -1,0 +1,85 @@
+---
+import Base from '../../layouts/Base.astro';
+import facilities from '../../data/facilities.json';
+export function getStaticPaths() {
+  return facilities.map(f => ({ params: { slug: f.slug }, props: { f } }));
+}
+const { f } = Astro.props;
+const addr = `${f.street}, ${f.city}, ${f.state} ${f.zip}`;
+const mapQ = encodeURIComponent(`${f.name}, ${addr}`);
+const near = facilities.filter(x => x.citySlug === f.citySlug && x.stateSlug === f.stateSlug && x.slug !== f.slug).slice(0, 5);
+const title = `${f.name} — Passport Acceptance Facility in ${f.city}, ${f.state}`;
+const desc = `${f.name} in ${f.city}, ${f.state}: phone ${f.phone}, address ${f.street}, hours, ${f.photoOnsite ? 'on-site passport photos, ' : ''}and how to apply. From the official State Department facility list.`;
+const schema = { "@context":"https://schema.org","@type":"GovernmentOffice","name":f.name,
+  "address":{"@type":"PostalAddress","streetAddress":f.street,"addressLocality":f.city,"addressRegion":f.state,"postalCode":f.zip,"addressCountry":"US"},
+  "telephone":f.phone,"url":new URL(Astro.url.pathname, Astro.site).href };
+const faq = [
+  { q:`Do I need an appointment at ${f.name}?`, a: f.note || `Many acceptance facilities take walk-ins, but policies vary by location. Call ${f.phone} to confirm whether this facility requires an appointment before you visit.` },
+  { q:`Can I get passport photos here?`, a: f.photoOnsite ? `Yes — this facility offers on-site passport photo service (fee applies, typically around $15). You can also bring your own compliant 2x2 photo.` : (f.photoNearby ? `This facility does not take photos on site, but photo services are available nearby (pharmacies and shipping stores). Bring a compliant 2x2 photo with you.` : `Photo service is not listed for this location — bring a compliant 2x2 passport photo with you.`) },
+  { q:`What should I bring?`, a:`Completed Form DS-11 (do not sign it beforehand), proof of U.S. citizenship plus a photocopy, valid photo ID plus a photocopy, one passport photo, and payment: the application fee by check or money order to "U.S. Department of State" and the $35 execution fee paid separately to the facility.` },
+  { q:`How much does it cost?`, a:`For a first-time adult passport book: $130 application fee + $35 execution fee = $165 total. Minors under 16: $100 + $35. Add $60 for expedited processing. See our full fee breakdown for cards, renewals and delivery options.` }
+];
+const schemaFaq = { "@context":"https://schema.org","@type":"FAQPage","mainEntity":faq.map(x => ({"@type":"Question","name":x.q,"acceptedAnswer":{"@type":"Answer","text":x.a}})) };
+const crumbs = {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+  {"@type":"ListItem","position":1,"name":"Home","item":"https://passportofficefinder.com/"},
+  {"@type":"ListItem","position":2,"name":f.stateName,"item":`https://passportofficefinder.com/${f.stateSlug}/`},
+  {"@type":"ListItem","position":3,"name":f.city,"item":`https://passportofficefinder.com/${f.stateSlug}/${f.citySlug}/`},
+  {"@type":"ListItem","position":4,"name":f.name}]};
+---
+<Base title={title} desc={desc} schema={schema}>
+<main class="wrap">
+  <div class="crumbs"><a href="/">Home</a> › <a href={`/${f.stateSlug}/`}>{f.stateName}</a> › <a href={`/${f.stateSlug}/${f.citySlug}/`}>{f.city}</a> › {f.name}</div>
+  <p class="kicker">{f.usps ? 'USPS Post Office · ' : ''}Official passport acceptance facility</p>
+  <h1 style="font-size:1.7rem">{f.name}</h1>
+  <p class="lead">Accepts new passport applications (Form DS-11) in {f.city}, {f.stateName}. Listed in the U.S. Department of State's official facility database.</p>
+  <div class="btns">
+    <a class="btn" href={`/${f.stateSlug}/${f.citySlug}/`}><i class="fa-solid fa-city"></i> More offices in {f.city}</a>
+    <a class="btn alt" href="/passport-fees/"><i class="fa-solid fa-dollar-sign"></i> 2026 fees</a>
+    <a class="btn ghost" href="/passport-appointment/"><i class="fa-solid fa-calendar-check"></i> How appointments work</a>
+  </div>
+
+  <iframe class="map" loading="lazy" src={`https://www.google.com/maps?q=${mapQ}&z=15&output=embed`} title={`Map: ${f.name}`}></iframe>
+  <div class="btns"><a class="btn ghost" href={`https://www.google.com/maps/dir/?api=1&destination=${mapQ}`} rel="nofollow noopener" target="_blank"><i class="fa-solid fa-diamond-turn-right"></i> Get directions</a></div>
+
+  <div class="panel gold">
+    <div class="tags" style="margin:0 0 12px">
+      {f.accessible && <span class="tag green"><i class="fa-solid fa-wheelchair"></i> Accessible</span>}
+      {f.photoOnsite && <span class="tag gold"><i class="fa-solid fa-camera"></i> Photos on-site</span>}
+      {!f.photoOnsite && f.photoNearby && <span class="tag">Photos nearby</span>}
+      {f.usps && <span class="tag">USPS</span>}
+    </div>
+    <div class="kv">
+      <b>Address</b><span>{addr}</span>
+      <b>Phone</b><span><a href={`tel:+1${f.phone.replace(/\D/g,'')}`}>{f.phone}</a></span>
+      {f.website && <><b>Scheduling</b><span><a href={f.website.startsWith('http') ? f.website : `https://${f.website}`} rel="nofollow noopener" target="_blank">{f.website.replace(/^https?:\/\//,'').slice(0,50)}</a></span></>}
+      {f.hours.length > 0 && <><b>Passport hours</b><span>{f.hours.map(h => <span style="display:block">{h.d}: {h.h}</span>)}</span></>}
+    </div>
+    {f.note && <p style="margin:12px 0 0;font-size:.9rem;color:#5a6472"><i class="fa-solid fa-circle-info" style="color:var(--gold2)"></i> {f.note}</p>}
+    <p style="margin:10px 0 0;font-size:.83rem;color:var(--mut)">Source: U.S. Department of State facility locator. Confirm hours by phone — passport windows often differ from general business hours.</p>
+  </div>
+
+  <h2>Before you go: 60-second checklist</h2>
+  <ol>
+    <li><strong>Form DS-11</strong> filled out but <em>unsigned</em> — you sign in front of the acceptance agent.</li>
+    <li><strong>Citizenship evidence</strong> (birth certificate or old passport) + a photocopy on plain paper.</li>
+    <li><strong>Photo ID</strong> (driver's license) + photocopy.</li>
+    <li><strong>One 2x2 photo</strong>{f.photoOnsite ? ' — or have it taken here on-site.' : '.'}</li>
+    <li><strong>Two payments:</strong> application fee by check or money order to "U.S. Department of State", and the $35 execution fee to the facility. <a href="/passport-fees/">Full fee table</a>.</li>
+  </ol>
+  <div class="note"><strong>Renewing?</strong> Most adult renewals skip the acceptance facility entirely — you can renew by mail or online for $130 with no execution fee. Facilities are for first-time applicants, children under 16, and replacements after loss.</div>
+
+  <h2>Frequently asked questions</h2>
+  {faq.map(x => <details class="fq"><summary>{x.q}</summary><div><p>{x.a}</p></div></details>)}
+
+  {near.length > 0 && <>
+    <h2>Other facilities in {f.city}</h2>
+    <div class="rowlist">
+      {near.map(n => <a class="row" href={`/facility/${n.slug}/`}><h3>{n.name}</h3><p class="sub">{n.street} · {n.phone}</p></a>)}
+    </div>
+  </>}
+
+  <div class="src">Independent site, not affiliated with the State Department or USPS. Facility details come from the official public locator and can change — verify with the facility.</div>
+</main>
+<script type="application/ld+json" set:html={JSON.stringify(schemaFaq)} />
+<script type="application/ld+json" set:html={JSON.stringify(crumbs)} />
+</Base>

@@ -1,0 +1,20 @@
+---
+import Base from '../layouts/Base.astro';
+import agencies from '../data/agencies.json';
+const title = 'Regional Passport Agencies: All 27 Locations for Urgent Travel (2026)';
+const desc = 'Every U.S. regional passport agency and center — addresses and how the appointment-only system works for travel within 14 days. Booked exclusively through 1-877-487-2778.';
+const schemaCol = { "@context":"https://schema.org","@type":"CollectionPage","name":title,
+  "mainEntity":{"@type":"ItemList","numberOfItems":agencies.length,"itemListElement":agencies.map((a,i)=>({"@type":"ListItem","position":i+1,"name":a.name,"url":`https://passportofficefinder.com/agency/${a.slug}/`}))}};
+---
+<Base title={title} desc={desc} schema={schemaCol}>
+<main class="wrap">
+  <div class="crumbs"><a href="/">Home</a> › Regional passport agencies</div>
+  <p class="kicker">27 locations · appointment only · urgent travel</p>
+  <h1 style="font-size:1.7rem">Regional passport agencies</h1>
+  <p class="lead">These State Department offices can issue a passport in days — or the same day — if you travel internationally within 14 days. Every one works by appointment only, booked through <strong>1-877-487-2778</strong>. Not traveling that soon? A <a href="/search/">local acceptance facility</a> with expedited service is your route.</p>
+  <div class="rowlist">
+    {agencies.map(a => <a class="row" href={`/agency/${a.slug}/`}><h3>{a.name}</h3><p class="sub">{a.street}, {a.city}, {a.state} {a.zip}</p></a>)}
+  </div>
+  <div class="src">Addresses from each agency's official travel.state.gov page.</div>
+</main>
+</Base>

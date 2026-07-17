@@ -1,0 +1,55 @@
+---
+import Base from '../layouts/Base.astro';
+import facilities from '../data/facilities.json';
+import { guides } from '../data/guides.js';
+const states = {};
+for (const f of facilities) (states[f.stateSlug] ||= { slug: f.stateSlug, name: f.stateName, n: 0 }).n++;
+const topCities = {};
+for (const f of facilities) {
+  const k = f.stateSlug + '/' + f.citySlug;
+  (topCities[k] ||= { url: `/${f.stateSlug}/${f.citySlug}/`, label: `${f.city}, ${f.state}`, n: 0 }).n++;
+}
+const top = Object.values(topCities).sort((a,b) => b.n - a.n).slice(0, 12);
+const title = `Passport Office Finder: All ${facilities.length.toLocaleString('en-US')} U.S. Acceptance Facilities + 2026 Guides`;
+const desc = `Find where to apply for a U.S. passport: every official acceptance facility (${facilities.length.toLocaleString('en-US')} post offices, libraries and clerk offices) with phones and hours, plus verified 2026 guides to fees, appointments and expedited service.`;
+---
+<Base title={title} desc={desc}>
+<section class="hero">
+  <div class="wrap" style="padding-top:0;padding-bottom:0">
+    <h1>Where to get your passport — every official office, one honest guide</h1>
+    <p>{facilities.length.toLocaleString('en-US')} acceptance facilities from the State Department's own database, with direct phones, real passport hours and photo availability. Plus the fee table and expedited routes the official sites scatter across ten pages.</p>
+    <form class="searchbox" action="/search/" method="get">
+      <input type="search" name="q" placeholder="Your city or ZIP code…" aria-label="Search" />
+      <button class="go" type="submit"><i class="fa-solid fa-magnifying-glass"></i> Find offices</button>
+    </form>
+  </div>
+</section>
+<main class="wrap">
+  <h2>Start with your situation</h2>
+  <div class="cols2">
+    <a class="row" href="/search/"><h3><i class="fa-solid fa-map-location-dot" style="color:var(--gold2)"></i> First passport or child under 16</h3><p class="sub">You apply in person — find the nearest acceptance facility with hours and phone.</p></a>
+    <a class="row" href="/passport-fees/"><h3><i class="fa-solid fa-dollar-sign" style="color:var(--gold2)"></i> What it costs in 2026</h3><p class="sub">$165 first adult book, $135 child, $130 renewal — the complete table.</p></a>
+    <a class="row" href="/expedited-passport/"><h3><i class="fa-solid fa-bolt" style="color:var(--gold2)"></i> Traveling soon</h3><p class="sub">+$60 expedited (2-3 weeks) or same-day agency service within 14 days of travel.</p></a>
+    <a class="row" href="/passport-appointment/"><h3><i class="fa-solid fa-calendar-check" style="color:var(--gold2)"></i> Appointments decoded</h3><p class="sub">USPS scheduler vs walk-in facilities vs the agency phone line.</p></a>
+  </div>
+
+  <h2>Busiest cities</h2>
+  <div class="cols2">
+    {top.map(t => <a class="row" href={t.url}><h3>{t.label}</h3><p class="sub">{t.n} facilities</p></a>)}
+  </div>
+
+  <h2>Browse by state</h2>
+  <div class="cols2">
+    {Object.values(states).sort((a,b) => a.name.localeCompare(b.name)).map(s => <a class="row" href={`/${s.slug}/`}><h3>{s.name}</h3><p class="sub">{s.n} facilities</p></a>)}
+  </div>
+
+  <h2>All guides</h2>
+  <div class="cols2">
+    {guides.map(g => <a class="row" href={`/${g.slug}/`}><h3><i class={`fa-solid ${g.icon}`} style="color:var(--gold2)"></i> {g.short}</h3><p class="sub">{g.hook}</p></a>)}
+    <a class="row" href="/regional-passport-agencies/"><h3><i class="fa-solid fa-building-columns" style="color:var(--gold2)"></i> Regional agencies</h3><p class="sub">All 27 urgent-travel locations, appointment rules included.</p></a>
+  </div>
+
+  <h2>Why this site exists</h2>
+  <p style="max-width:760px">The official locator shows you dots on a map; the fee schedule lives on another site; appointment rules on a third. We merged the State Department's complete facility database with verified 2026 fees and plain-English process guides — and nothing else. <strong>We are not the government</strong>, we don't book appointments, and we don't sell expediting. Every data point links back to its official source.</p>
+</main>
+</Base>

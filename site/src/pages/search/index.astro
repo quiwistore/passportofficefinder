@@ -1,0 +1,33 @@
+---
+import Base from '../../layouts/Base.astro';
+import facilities from '../../data/facilities.json';
+const states = {};
+for (const f of facilities) (states[f.stateSlug] ||= { slug: f.stateSlug, name: f.stateName, n: 0 }).n++;
+const title = `Find a Passport Office: Search ${facilities.length.toLocaleString('en-US')} Official Facilities`;
+const desc = `Search every U.S. passport acceptance facility by name, city or ZIP — ${facilities.length.toLocaleString('en-US')} official locations with phones, hours and on-site photo service, from State Department data.`;
+---
+<Base title={title} desc={desc}>
+<main class="wrap">
+  <div class="crumbs"><a href="/">Home</a> › Find an office</div>
+  <p class="kicker">{facilities.length.toLocaleString('en-US')} facilities · 57 states & territories</p>
+  <h1 style="font-size:1.7rem">Find a passport office near you</h1>
+  <p class="lead">Type a city, ZIP code or facility name — or browse by state below.</p>
+  <input class="filter" id="q" type="search" placeholder="Search by city, ZIP or facility name (e.g. Miami, 90210, Mill Creek)…" autocomplete="off" />
+  <div class="rowlist" id="hits" style="display:none"></div>
+  <div class="cols2" id="states">
+    {Object.values(states).sort((a,b) => a.name.localeCompare(b.name)).map(s => <a class="row" href={`/${s.slug}/`}><h3>{s.name}</h3><p class="sub">{s.n} facilities</p></a>)}
+  </div>
+  <div class="src">Source: U.S. Department of State facility locator.</div>
+</main>
+<script define:vars={{ mini: facilities.map(f => ({ s: f.slug, n: f.name.slice(0, 48), c: f.city, st: f.state, z: f.zip })) }}>
+const q = document.getElementById('q'), hits = document.getElementById('hits'), st = document.getElementById('states');
+q.addEventListener('input', () => {
+  const v = q.value.trim().toLowerCase();
+  if (v.length < 2) { st.style.display = ''; hits.style.display = 'none'; return; }
+  const r = mini.filter(f => f.n.toLowerCase().includes(v) || f.c.toLowerCase().includes(v) || f.z.startsWith(v)).slice(0, 25);
+  st.style.display = 'none'; hits.style.display = '';
+  hits.innerHTML = r.length ? r.map(f => `<a class="row" href="/facility/${f.s}/"><h3>${f.n}</h3><p class="sub">${f.c}, ${f.st} ${f.z}</p></a>`).join('') : '<p style="padding:14px">No matches — try the state pages below or a shorter term.</p>';
+  if (!r.length) st.style.display = '';
+});
+</script>
+</Base>

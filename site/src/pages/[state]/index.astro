@@ -1,0 +1,32 @@
+---
+import Base from '../../layouts/Base.astro';
+import facilities from '../../data/facilities.json';
+export function getStaticPaths() {
+  const m = {};
+  for (const f of facilities) (m[f.stateSlug] ||= { slug: f.stateSlug, name: f.stateName, st: f.state, list: [] }).list.push(f);
+  return Object.values(m).map(s => ({ params: { state: s.slug }, props: { s } }));
+}
+const { s } = Astro.props;
+const cities = {};
+for (const f of s.list) (cities[f.citySlug] ||= { slug: f.citySlug, city: f.city, n: 0 }).n++;
+const title = `Passport Offices in ${s.name}: ${s.list.length} Acceptance Facilities by City`;
+const desc = `All ${s.list.length} passport acceptance facilities in ${s.name} — post offices, libraries and clerk offices where you can apply in person, organized by city, with phones and hours from official State Department data.`;
+---
+<Base title={title} desc={desc}>
+<main class="wrap">
+  <div class="crumbs"><a href="/">Home</a> › {s.name}</div>
+  <p class="kicker">{s.list.length} facilities · {Object.keys(cities).length} cities</p>
+  <h1 style="font-size:1.7rem">Passport offices in {s.name}</h1>
+  <p class="lead">Every official passport acceptance facility in {s.name}, by city. Each listing includes phone, address, hours and whether photos are available on-site.</p>
+  <div class="cols2">
+    {Object.values(cities).sort((a,b) => b.n - a.n || a.city.localeCompare(b.city)).map(c => <a class="row" href={`/${s.slug}/${c.slug}/`}><h3>{c.city}</h3><p class="sub">{c.n} {c.n === 1 ? 'facility' : 'facilities'}</p></a>)}
+  </div>
+  <h2>Useful before you apply</h2>
+  <div class="cols2">
+    <a class="row" href="/passport-fees/"><h3><i class="fa-solid fa-dollar-sign" style="color:var(--gold2)"></i> Passport fees 2026</h3><p class="sub">$165 first adult book all-in — full breakdown.</p></a>
+    <a class="row" href="/expedited-passport/"><h3><i class="fa-solid fa-bolt" style="color:var(--gold2)"></i> Need it fast?</h3><p class="sub">Expedited service, agencies and real timelines.</p></a>
+    <a class="row" href="/walk-in-passport/"><h3><i class="fa-solid fa-person-walking" style="color:var(--gold2)"></i> Walk-in options</h3><p class="sub">Which facilities take you without an appointment.</p></a>
+  </div>
+  <div class="src">Source: U.S. Department of State official facility locator.</div>
+</main>
+</Base>

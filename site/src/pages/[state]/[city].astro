@@ -1,0 +1,60 @@
+---
+import Base from '../../layouts/Base.astro';
+import facilities from '../../data/facilities.json';
+export function getStaticPaths() {
+  const m = {};
+  for (const f of facilities) {
+    const k = f.stateSlug + '/' + f.citySlug;
+    (m[k] ||= { stateSlug: f.stateSlug, citySlug: f.citySlug, city: f.city, stateName: f.stateName, st: f.state, list: [] }).list.push(f);
+  }
+  return Object.values(m).map(c => ({ params: { state: c.stateSlug, city: c.citySlug }, props: { c } }));
+}
+const { c } = Astro.props;
+const n = c.list.length;
+const conFoto = c.list.filter(f => f.photoOnsite).length;
+const title = `Passport Office${n === 1 ? '' : 's'} in ${c.city}, ${c.st}: ${n} Acceptance ${n === 1 ? 'Facility' : 'Facilities'} (Phones & Hours)`;
+const desc = `Where to apply for a passport in ${c.city}, ${c.stateName}: ${n} official acceptance ${n === 1 ? 'facility' : 'facilities'} with phone numbers, addresses, hours${conFoto ? ' and on-site photos' : ''}. From State Department data.`;
+const schemaCol = { "@context":"https://schema.org","@type":"CollectionPage","name":title,
+  "mainEntity":{"@type":"ItemList","numberOfItems":n,"itemListElement":c.list.map((f,i)=>({"@type":"ListItem","position":i+1,"name":f.name,"url":`https://passportofficefinder.com/facility/${f.slug}/`}))}};
+const crumbs = {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+  {"@type":"ListItem","position":1,"name":"Home","item":"https://passportofficefinder.com/"},
+  {"@type":"ListItem","position":2,"name":c.stateName,"item":`https://passportofficefinder.com/${c.stateSlug}/`},
+  {"@type":"ListItem","position":3,"name":`Passport offices in ${c.city}`}]};
+const faq = [
+  { q:`Do I need an appointment for a passport in ${c.city}?`, a:`It depends on the facility. USPS locations in ${c.city} use the online scheduler at usps.com, while libraries and clerk offices set their own rules — some take walk-ins. Each listing above shows the facility's phone and scheduling link so you can confirm in one call.` },
+  { q:`How much will it cost?`, a:`A first-time adult passport book is $165 total ($130 application fee + $35 execution fee paid at the facility in ${c.city}). Children under 16 pay $135. Expedited processing adds $60. Renewals by mail or online are $130 with no facility visit needed.` },
+  { q:`Can I get my passport the same day in ${c.city}?`, a:`Acceptance facilities cannot issue passports — they forward your application. For genuinely urgent travel (within 14 days), you need an appointment at a regional passport agency, booked through 1-877-487-2778. See our expedited guide for the fastest legitimate routes.` }
+];
+const schemaFaq = { "@context":"https://schema.org","@type":"FAQPage","mainEntity":faq.map(x=>({"@type":"Question","name":x.q,"acceptedAnswer":{"@type":"Answer","text":x.a}}))};
+---
+<Base title={title} desc={desc} schema={schemaCol}>
+<main class="wrap">
+  <div class="crumbs"><a href="/">Home</a> › <a href={`/${c.stateSlug}/`}>{c.stateName}</a> › {c.city}</div>
+  <p class="kicker">{n} official {n === 1 ? 'facility' : 'facilities'} · {c.city}, {c.st}</p>
+  <h1 style="font-size:1.7rem">Passport offices in {c.city}, {c.stateName}</h1>
+  <p class="lead">{n === 1 ? 'The official place' : `All ${n} official places`} to submit a passport application (Form DS-11) in {c.city} — with direct phone numbers, hours and services, straight from the State Department's facility database.</p>
+  <div class="rowlist">
+    {c.list.map(f => <a class="row" href={`/facility/${f.slug}/`}>
+      <h3>{f.name}</h3>
+      <p class="sub">{f.street} · <strong>{f.phone}</strong></p>
+      <div class="tags">
+        {f.usps && <span class="tag">USPS</span>}
+        {f.photoOnsite && <span class="tag gold">Photos on-site</span>}
+        {f.accessible && <span class="tag green">Accessible</span>}
+        {f.hours.length > 0 && <span class="tag">{f.hours[0].d}: {f.hours[0].h.split(' (')[0]}</span>}
+      </div>
+    </a>)}
+  </div>
+  <h2>Applying in {c.city}: the short version</h2>
+  <ul>
+    <li><strong>First passport or child under 16?</strong> You must apply in person at one of the facilities above with an unsigned DS-11, citizenship evidence, photo ID and photos. <a href="/passport-fees/">Fees here</a>.</li>
+    <li><strong>Renewing an adult passport?</strong> Skip the trip — renew by mail or online for $130, no execution fee.</li>
+    <li><strong>Traveling within 14 days?</strong> Facilities in {c.city} can't rush it. You need a <a href="/regional-passport-agencies/">regional agency appointment</a> or <a href="/expedited-passport/">expedited service</a> (+$60, 2-3 weeks).</li>
+  </ul>
+  <h2>Frequently asked questions</h2>
+  {faq.map(x => <details class="fq"><summary>{x.q}</summary><div><p>{x.a}</p></div></details>)}
+  <div class="src">Independent guide. Facility data from the official State Department locator — confirm hours by phone before visiting.</div>
+</main>
+<script type="application/ld+json" set:html={JSON.stringify(schemaFaq)} />
+<script type="application/ld+json" set:html={JSON.stringify(crumbs)} />
+</Base>

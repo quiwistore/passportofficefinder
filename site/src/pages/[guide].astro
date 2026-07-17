@@ -1,0 +1,39 @@
+---
+import Base from '../layouts/Base.astro';
+import { guides } from '../data/guides.js';
+export function getStaticPaths() {
+  return guides.map(g => ({ params: { guide: g.slug }, props: { g } }));
+}
+const { g } = Astro.props;
+const others = guides.filter(x => x.slug !== g.slug).slice(0, 3);
+const updated = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+const schemaArt = { "@context":"https://schema.org","@type":"Article","headline":g.title,"inLanguage":"en","author":{"@type":"Organization","name":"Passport Office Finder"} };
+const schemaFaq = { "@context":"https://schema.org","@type":"FAQPage","mainEntity":g.faq.map(f => ({"@type":"Question","name":f[0],"acceptedAnswer":{"@type":"Answer","text":f[1].replace(/<[^>]+>/g,'')}})) };
+---
+<Base title={g.title} desc={g.desc} schema={schemaArt}>
+<main class="wrap">
+  <div class="crumbs"><a href="/">Home</a> › Guides › {g.short}</div>
+  <p class="kicker">Passport guide · verified against official sources</p>
+  <h1 style="font-size:1.85rem">{g.title}</h1>
+  <div class="meta-line"><span><i class="fa-regular fa-calendar-check"></i>Updated {updated}</span><span><i class="fa-solid fa-scale-balanced"></i>Sources: travel.state.gov · USPS</span></div>
+  <div class="note"><strong>The short answer:</strong> {g.quick}</div>
+  <article>
+  {g.body.map(([t, c]) => {
+    if (t === 'p') return <p style="margin:12px 0" set:html={c} />;
+    if (t === 'h2') return <h2>{c}</h2>;
+    if (t === 'ul') return <ul>{c.map(i => <li set:html={i} />)}</ul>;
+    if (t === 'ol') return <ol>{c.map(i => <li set:html={i} />)}</ol>;
+    if (t === 'table') return <table class="fees"><thead><tr>{c[0].map(h => <th>{h}</th>)}</tr></thead><tbody>{c.slice(1).map(r => <tr>{r.map(d => <td set:html={d} />)}</tr>)}</tbody></table>;
+  })}
+  <h2>Frequently asked questions</h2>
+  {g.faq.map(f => <details class="fq"><summary>{f[0]}</summary><div><p set:html={f[1]} /></div></details>)}
+  </article>
+  <h2>Keep going</h2>
+  <div class="cols2">
+    <a class="row" href="/search/"><h3><i class="fa-solid fa-magnifying-glass" style="color:var(--gold2)"></i> Find your nearest office</h3><p class="sub">7,471 official facilities with phones and hours.</p></a>
+    {others.map(o => <a class="row" href={`/${o.slug}/`}><h3><i class={`fa-solid ${o.icon}`} style="color:var(--gold2)"></i> {o.short}</h3><p class="sub">{o.hook}</p></a>)}
+  </div>
+  <div class="src">Independent guide. Fees and timelines verified against the official State Department fee schedule; amounts can change — travel.state.gov is the binding source.</div>
+</main>
+<script type="application/ld+json" set:html={JSON.stringify(schemaFaq)} />
+</Base>

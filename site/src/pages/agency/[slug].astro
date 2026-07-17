@@ -1,0 +1,61 @@
+---
+import Base from '../../layouts/Base.astro';
+import agencies from '../../data/agencies.json';
+export function getStaticPaths() {
+  return agencies.map(a => ({ params: { slug: a.slug }, props: { a } }));
+}
+const { a } = Astro.props;
+const addr = `${a.street}, ${a.city}, ${a.state} ${a.zip}`;
+const mapQ = encodeURIComponent(`${a.name}, ${addr}`);
+const others = agencies.filter(x => x.slug !== a.slug).slice(0, 6);
+const title = `${a.name} — Appointments, Address & Urgent Passport Service`;
+const desc = `${a.name} in ${a.city}, ${a.state}: address ${a.street}, how to book an appointment (1-877-487-2778), who qualifies for urgent service, and what to bring. Official State Department location.`;
+const schema = { "@context":"https://schema.org","@type":"GovernmentOffice","name":a.name,
+  "address":{"@type":"PostalAddress","streetAddress":a.street,"addressLocality":a.city,"addressRegion":a.state,"postalCode":a.zip,"addressCountry":"US"},
+  "telephone":a.apptPhone,"url":new URL(Astro.url.pathname, Astro.site).href };
+const faq = [
+  { q:`How do I get an appointment at the ${a.name}?`, a:`Appointments cannot be booked at the door or online for most cases — call the National Passport Information Center at 1-877-487-2778 (TDD 1-888-874-7793). You generally must have international travel within 14 days (or need a foreign visa within 28 days) and proof of travel.` },
+  { q:`Can I just walk in?`, a:`No. Passport agencies see customers by appointment only. If you arrive without one, you will be turned away — even with urgent travel. The appointment line is the only official route, and appointments are free.` },
+  { q:`What counts as a life-or-death emergency?`, a:`Travel within 72 hours because an immediate family member abroad is seriously ill, injured or has died. You'll need documentation (medical statement or death certificate) plus proof of travel. Call the same number and follow the emergency prompts.` },
+  { q:`What do I bring to my appointment?`, a:`Proof of imminent travel, your completed application (DS-11 unsigned, or DS-82 for renewals), citizenship evidence, photo ID, one 2x2 photo, and payment including the $60 expedite fee. Arrive early — federal building security takes time.` }
+];
+const schemaFaq = { "@context":"https://schema.org","@type":"FAQPage","mainEntity":faq.map(x=>({"@type":"Question","name":x.q,"acceptedAnswer":{"@type":"Answer","text":x.a}}))};
+---
+<Base title={title} desc={desc} schema={schema}>
+<main class="wrap">
+  <div class="crumbs"><a href="/">Home</a> › <a href="/regional-passport-agencies/">Passport agencies</a> › {a.name}</div>
+  <p class="kicker">Regional passport agency · urgent travel service</p>
+  <h1 style="font-size:1.7rem">{a.name}</h1>
+  <p class="lead">One of 27 State Department locations nationwide that can issue passports for urgent travel — by appointment only, for travelers leaving within 14 days.</p>
+  <div class="btns">
+    <a class="btn" href={`tel:18774872778`}><i class="fa-solid fa-phone"></i> Book: 1-877-487-2778</a>
+    <a class="btn alt" href="/expedited-passport/"><i class="fa-solid fa-bolt"></i> All expedited routes</a>
+  </div>
+  <iframe class="map" loading="lazy" src={`https://www.google.com/maps?q=${mapQ}&z=15&output=embed`} title={`Map: ${a.name}`}></iframe>
+  <div class="panel gold">
+    <div class="kv">
+      <b>Address</b><span>{addr}</span>
+      <b>Appointments</b><span>1-877-487-2778 (National Passport Information Center) — appointments are free</span>
+      <b>Who qualifies</b><span>International travel within 14 days, or need for a foreign visa within 28 days</span>
+      <b>Emergency</b><span>Life-or-death emergencies (travel within 72 hours): same number, with documentation</span>
+    </div>
+    <p style="margin:10px 0 0;font-size:.83rem;color:var(--mut)">Source: travel.state.gov — {a.name} official page. Policies and hours can change; the appointment line confirms current rules.</p>
+  </div>
+  <h2>How agency service actually works</h2>
+  <ol>
+    <li><strong>Call first.</strong> No appointment, no entry — this is the rule at every agency, with no exceptions for lines or urgency.</li>
+    <li><strong>Prove the deadline.</strong> Itinerary, ticket or reservation showing travel within 14 days.</li>
+    <li><strong>Come complete.</strong> Application filled (unsigned if DS-11), evidence, ID, photo and payment including the <a href="/passport-fees/">$60 expedite fee</a>.</li>
+    <li><strong>Same-visit pickup is common</strong> for straightforward cases — many travelers leave with the passport the same day or next business day.</li>
+  </ol>
+  <div class="note"><strong>Not traveling within 14 days?</strong> You don't need an agency. Apply at a <a href="/search/">local acceptance facility</a> with expedited service (+$60) and get your passport in roughly 2-3 weeks.</div>
+  <h2>Frequently asked questions</h2>
+  {faq.map(x => <details class="fq"><summary>{x.q}</summary><div><p>{x.a}</p></div></details>)}
+  <h2>Other regional agencies</h2>
+  <div class="cols2">
+    {others.map(o => <a class="row" href={`/agency/${o.slug}/`}><h3>{o.name}</h3><p class="sub">{o.city}, {o.state}</p></a>)}
+  </div>
+  <div class="src">Independent guide, not affiliated with the U.S. Department of State.</div>
+</main>
+<script type="application/ld+json" set:html={JSON.stringify(schemaFaq)} />
+</Base>
