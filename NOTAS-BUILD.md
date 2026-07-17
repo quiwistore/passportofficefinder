@@ -1,24 +1,18 @@
-# passportofficefinder.com — estado al 17/07/2026
+# passportofficefinder.com — BUILD COMPLETO (madrugada 17/07/2026)
 
-## Listo en disco
-- data/facilities-clean.json: 7.471 facilities decodificadas (57 estados, 5.832 ciudades, horarios legibles, flags accessible/photoOnsite/photoNearby confirmados contra el codigo fuente oficial: bit0/1/2, tel formateado, flag usps)
-- data/facilities.json: crudo oficial (iafdb.travel.state.gov/data/Facilities.json — actualizacion = un curl con UA Chrome + referer)
-- data/agencies-list.json: 27 agencias regionales (scrapear ficha por ficha: direccion/tel/horario en travel.state.gov, Akamai requiere Chrome con espera de challenge)
+## Estado: listo para deploy — commit 331c7b87, repo quiwistore/passportofficefinder
 
-## Pendiente del build (sesion nueva)
-1. Scrape 27 fichas de agencias via Chrome (batch navigate+extract)
-2. Verificar fees oficiales 2026 (execution $35, book $130 adulto, expedited +$60, online renewal) + processing times actuales — 1 busqueda con fuentes travel.state.gov
-3. Build Astro con IDENTIDAD NUEVA (diferenciacion pedida por Agus):
-   - Paleta pasaporte US: navy #1c2e4a + dorado #b8933d + crema; serif display para titulos
-   - Search-first: hero con buscador ZIP/ciudad; fichas SIN sidebar, 1 columna, mapa arriba
-   - Cards horizontales tipo lista (no grid 3-col)
-   - URLs: /[stateSlug]/ (57) + /[stateSlug]/[citySlug]/ (5.832) + /facility/[slug]/ (7.471) + /agency/[slug]/ (27)
-   - Badges: Accessible / Photo on-site / link directo scheduler USPS por facility
-   - Guias (CPC oro): /expedited-passport/ /passport-appointment/ /walk-in-passport/ /passport-fees/ /how-long-does-a-passport-take/ /passport-at-the-post-office/ + hub agencias
-   - ~13.400 paginas — el mayor de la red
-4. Clave IndexNow ANTES del deploy; repo quiwistore/passportofficefinder; server US 5.161.45.34
+- 13.400 paginas: 7.471 /facility/ + 5.832 /[estado]/[ciudad]/ + 57 /[estado]/ + 27 /agency/ + 6 guias + hub agencias + search + core
+- Identidad diferenciada de la red: navy #1c2e4a / dorado #b8933d / crema, Source Serif 4 + Public Sans, search-first, fichas sin sidebar (mapa arriba), cards horizontales, band "not the U.S. Department of State"
+- Datos: facilities del JSON oficial iafdb (bitmask verificado contra codigo fuente), 27 agencias del JSON-LD oficial de travel.state.gov, fees 2026 verificados (book $130+$35, renewal $130, child $135, expedited +$60, delivery ~$23, agency 877-487-2778 / 14 dias / life-or-death 72h)
+- QA: JSON-LD 0 errores (muestra 1.200 pags), paridad sitemap 13.399=13.399, 200s
+- Clave IndexNow: a86a00548da847dca0033a9021f9365e (dentro del dist), payload data/indexnow-payload.json, scripts/indexnow.sh con guard
 
-## Research (cerrado)
-- Directorio: acceptance facility near me 6.800/KD2 + walk-in 7.800/KD3 + ciudades KD0-10 CPC $45-160
-- Oro: expedited ~35.000 sumado KD5-30 CPC $160-350; appointment 37.000/KD7
-- SERPs: .gov + bibliotecas DR35 + nicheros en AIO — hiperlocal blando
+## Pendiente (Agus):
+1. Cloudflare: passportofficefinder.com -> A 5.161.45.34, DNS-only
+2. Runcloud (server US): webapp -> repo quiwistore/passportofficefinder -> public path /dist -> SSL -> Deploy Now
+3. Avisar a Claude: verificacion 200s + IndexNow + GSC + Bing
+
+## Mantenimiento futuro:
+- Refresh del dataset: curl -A "Chrome UA" -e "https://iafdb.travel.state.gov/" https://iafdb.travel.state.gov/data/Facilities.json + re-procesar (script en historial de chat) + rebuild
+- Fees: revisar travel.state.gov ante cambios de fee schedule
