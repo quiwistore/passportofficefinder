@@ -5,7 +5,18 @@ export function getStaticPaths() {
   return facilities.map(f => ({ params: { slug: f.slug }, props: { f } }));
 }
 const { f } = Astro.props;
+const hx = [...f.slug].reduce((a, c) => (a * 31 + c.charCodeAt(0)) % 997, 7);
 const addr = `${f.street}, ${f.city}, ${f.state} ${f.zip}`;
+const tipoTxt = f.usps ? 'This post office' : 'This facility';
+const leads = [
+  `Accepts new passport applications (Form DS-11) in ${f.city}, ${f.stateName}. Listed in the U.S. Department of State's official facility database, with phone, hours and services below.`,
+  `${tipoTxt} is one of the official locations in ${f.city}, ${f.stateName} where you can submit a first-time passport application in person — verified against the State Department's facility database.`,
+  `Applying for a passport in ${f.city}? ${f.name} appears in the State Department's official list of acceptance facilities. Phone, address, passport hours and photo availability below.`,
+  `An official passport acceptance point serving ${f.city}, ${f.stateName}: here you can execute Form DS-11 for first-time applicants and children under 16. Details from State Department data.`,
+  `${f.name} handles in-person passport applications for the ${f.city} area. Its listing in the official State Department database includes the contact details and services shown here.`,
+  `One of ${f.city}'s official acceptance facilities for U.S. passport applications. Below: direct phone, passport window hours and what to bring, sourced from the State Department's locator.`
+];
+const lead = leads[hx % 6];
 const mapQ = encodeURIComponent(`${f.name}, ${addr}`);
 const near = facilities.filter(x => x.citySlug === f.citySlug && x.stateSlug === f.stateSlug && x.slug !== f.slug).slice(0, 5);
 const title = `${f.name} — Passport Acceptance Facility in ${f.city}, ${f.state}`;
@@ -31,7 +42,7 @@ const crumbs = {"@context":"https://schema.org","@type":"BreadcrumbList","itemLi
   <div class="crumbs"><a href="/">Home</a> › <a href={`/${f.stateSlug}/`}>{f.stateName}</a> › <a href={`/${f.stateSlug}/${f.citySlug}/`}>{f.city}</a> › {f.name}</div>
   <p class="kicker">{f.usps ? 'USPS Post Office · ' : ''}Official passport acceptance facility</p>
   <h1 style="font-size:1.7rem">{f.name}</h1>
-  <p class="lead">Accepts new passport applications (Form DS-11) in {f.city}, {f.stateName}. Listed in the U.S. Department of State's official facility database.</p>
+  <p class="lead">{lead}</p>
   <div class="btns">
     <a class="btn" href={`/${f.stateSlug}/${f.citySlug}/`}><i class="fa-solid fa-city"></i> More offices in {f.city}</a>
     <a class="btn alt" href="/passport-fees/"><i class="fa-solid fa-dollar-sign"></i> 2026 fees</a>
@@ -58,7 +69,7 @@ const crumbs = {"@context":"https://schema.org","@type":"BreadcrumbList","itemLi
     <p style="margin:10px 0 0;font-size:.83rem;color:var(--mut)">Source: U.S. Department of State facility locator. Confirm hours by phone — passport windows often differ from general business hours.</p>
   </div>
 
-  <h2>Before you go: 60-second checklist</h2>
+  <h2>{['Before you go: 60-second checklist', 'What to bring: the 60-second checklist', `Applying at ${f.name}: quick checklist`, 'Your visit, prepared in 60 seconds'][hx % 4]}</h2>
   <ol>
     <li><strong>Form DS-11</strong> filled out but <em>unsigned</em> — you sign in front of the acceptance agent.</li>
     <li><strong>Citizenship evidence</strong> (birth certificate or old passport) + a photocopy on plain paper.</li>
@@ -66,7 +77,7 @@ const crumbs = {"@context":"https://schema.org","@type":"BreadcrumbList","itemLi
     <li><strong>One 2x2 photo</strong>{f.photoOnsite ? ' — or have it taken here on-site.' : '.'}</li>
     <li><strong>Two payments:</strong> application fee by check or money order to "U.S. Department of State", and the $35 execution fee to the facility. <a href="/passport-fees/">Full fee table</a>.</li>
   </ol>
-  <div class="note"><strong>Renewing?</strong> Most adult renewals skip the acceptance facility entirely — you can renew by mail or online for $130 with no execution fee. Facilities are for first-time applicants, children under 16, and replacements after loss.</div>
+  <div class="note"><strong>{['Renewing?', 'Already had a passport?', 'Adult renewal?'][hx % 3]}</strong> Most adult renewals skip the acceptance facility entirely — you can renew by mail or online for $130 with no execution fee. Facilities are for first-time applicants, children under 16, and replacements after loss.</div>
 
   <h2>Frequently asked questions</h2>
   {faq.map(x => <details class="fq"><summary>{x.q}</summary><div><p>{x.a}</p></div></details>)}
