@@ -21,9 +21,15 @@ const mapQ = encodeURIComponent(`${f.name}, ${addr}`);
 const near = facilities.filter(x => x.citySlug === f.citySlug && x.stateSlug === f.stateSlug && x.slug !== f.slug).slice(0, 5);
 const title = `${f.name} — Passport Acceptance Facility in ${f.city}, ${f.state}`;
 const desc = `${f.name} in ${f.city}, ${f.state}: phone ${f.phone}, address ${f.street}, hours, ${f.photoOnsite ? 'on-site passport photos, ' : ''}and how to apply. From the official State Department facility list.`;
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const dayHours = DAYS.map(d => {
+  const g = f.hours.find(h => h.d.includes(d.slice(0,3)) || (h.d.includes('\u2013') && DAYS.indexOf(d) >= DAYS.indexOf(h.d.split('\u2013')[0]) && DAYS.indexOf(d) <= DAYS.indexOf(h.d.split('\u2013')[1])));
+  return { day: d, txt: g ? g.h : 'Closed / not listed' };
+});
+const hoursSpec = f.hours.length ? { "openingHoursSpecification": dayHours.filter(x => x.txt !== 'Closed / not listed').map(x => { const m = x.txt.match(/(\d+):(\d+) (AM|PM) \u2013 (\d+):(\d+) (PM|AM)/); if (!m) return null; const h24 = (h, ap) => String(ap === 'PM' && +h < 12 ? +h + 12 : +h).padStart(2, '0'); return { "@type":"OpeningHoursSpecification", "dayOfWeek": x.day, "opens": `${h24(m[1], m[3])}:${m[2]}`, "closes": `${h24(m[4], m[6])}:${m[5]}` }; }).filter(Boolean) } : {};
 const schema = { "@context":"https://schema.org","@type":"GovernmentOffice","name":f.name,
   "address":{"@type":"PostalAddress","streetAddress":f.street,"addressLocality":f.city,"addressRegion":f.state,"postalCode":f.zip,"addressCountry":"US"},
-  "telephone":f.phone,"url":new URL(Astro.url.pathname, Astro.site).href };
+  "telephone":f.phone,...hoursSpec,"url":new URL(Astro.url.pathname, Astro.site).href };
 const faq = [
   { q:`Do I need an appointment at ${f.name}?`, a: f.note || `Many acceptance facilities take walk-ins, but policies vary by location. Call ${f.phone} to confirm whether this facility requires an appointment before you visit.` },
   { q:`Can I get passport photos here?`, a: f.photoOnsite ? `Yes — this facility offers on-site passport photo service (fee applies, typically around $15). You can also bring your own compliant 2x2 photo.` : (f.photoNearby ? `This facility does not take photos on site, but photo services are available nearby (pharmacies and shipping stores). Bring a compliant 2x2 photo with you.` : `Photo service is not listed for this location — bring a compliant 2x2 passport photo with you.`) },
@@ -49,6 +55,14 @@ const crumbs = {"@context":"https://schema.org","@type":"BreadcrumbList","itemLi
     <a class="btn ghost" href="/passport-appointment/"><i class="fa-solid fa-calendar-check"></i> How appointments work</a>
   </div>
 
+  <h2 style="margin-top:1.6rem">Before you visit</h2>
+  <div class="cols2">
+    <a class="row" href={f.usps && f.website ? (f.website.startsWith('http') ? f.website : `https://${f.website}`) : '/passport-appointment/'} rel={f.usps ? 'nofollow noopener' : undefined} target={f.usps ? '_blank' : undefined}><h3><i class="fa-solid fa-calendar-check" style="color:var(--gold2)"></i> {f.usps ? 'Book on the USPS scheduler' : 'Check appointment rules'}</h3><p class="sub">{f.usps ? 'This location books passport slots online — direct link.' : 'Some facilities take walk-ins; one call settles it.'}</p></a>
+    <a class="row" href="/talk-to-a-real-person/"><h3><i class="fa-solid fa-headset" style="color:var(--gold2)"></i> Talk to a real person</h3><p class="sub">The shortcut through the passport line's phone menu (NPIC).</p></a>
+    <a class="row" href="#checklist"><h3><i class="fa-solid fa-list-check" style="color:var(--gold2)"></i> What to bring</h3><p class="sub">DS-11 unsigned, evidence, ID, photo, two payments — the checklist.</p></a>
+    <a class="row" href="/passport-fees/"><h3><i class="fa-solid fa-dollar-sign" style="color:var(--gold2)"></i> Exact 2026 fees</h3><p class="sub">$165 first adult book all-in. Full table, who pays what to whom.</p></a>
+  </div>
+
   <iframe class="map" loading="lazy" src={`https://www.google.com/maps?q=${mapQ}&z=15&output=embed`} title={`Map: ${f.name}`}></iframe>
   <div class="btns"><a class="btn ghost" href={`https://www.google.com/maps/dir/?api=1&destination=${mapQ}`} rel="nofollow noopener" target="_blank"><i class="fa-solid fa-diamond-turn-right"></i> Get directions</a></div>
 
@@ -63,13 +77,19 @@ const crumbs = {"@context":"https://schema.org","@type":"BreadcrumbList","itemLi
       <b>Address</b><span>{addr}</span>
       <b>Phone</b><span><a href={`tel:+1${f.phone.replace(/\D/g,'')}`}>{f.phone}</a></span>
       {f.website && <><b>Scheduling</b><span><a href={f.website.startsWith('http') ? f.website : `https://${f.website}`} rel="nofollow noopener" target="_blank">{f.website.replace(/^https?:\/\//,'').slice(0,50)}</a></span></>}
-      {f.hours.length > 0 && <><b>Passport hours</b><span>{f.hours.map(h => <span style="display:block">{h.d}: {h.h}</span>)}</span></>}
+      {f.hours.length > 0 && <><b>Passport hours</b><span><table style="border-collapse:collapse;font-size:.92rem">{dayHours.map(x => <tr data-day={x.day}><td style="padding:1px 14px 1px 0;font-weight:600">{x.day}</td><td>{x.txt}</td></tr>)}</table></span></>}
     </div>
     {f.note && <p style="margin:12px 0 0;font-size:.9rem;color:#5a6472"><i class="fa-solid fa-circle-info" style="color:var(--gold2)"></i> {f.note}</p>}
     <p style="margin:10px 0 0;font-size:.83rem;color:var(--mut)">Source: U.S. Department of State facility locator. Confirm hours by phone — passport windows often differ from general business hours.</p>
   </div>
 
-  <h2>{['Before you go: 60-second checklist', 'What to bring: the 60-second checklist', `Applying at ${f.name}: quick checklist`, 'Your visit, prepared in 60 seconds'][hx % 4]}</h2>
+  <h2>Busy and quiet times</h2>
+  <ul>
+    <li><strong>Quietest:</strong> mid-morning and mid-afternoon, Tuesday to Thursday{f.usps ? ' — and scheduler slots released for those windows go last' : ''}.</li>
+    <li><strong>Busiest:</strong> Mondays, lunchtime, Saturdays{f.hours.some(h => h.d.includes('Sat')) ? ' (this location has Saturday passport hours — expect lines)' : ''}, and January through summer as travel season peaks.</li>
+    <li><strong>Rule of thumb:</strong> passport windows close intake before posted closing when the day's capacity fills — earlier in your visit beats later.</li>
+  </ul>
+  <h2 id="checklist">{['Before you go: 60-second checklist', 'What to bring: the 60-second checklist', `Applying at ${f.name}: quick checklist`, 'Your visit, prepared in 60 seconds'][hx % 4]}</h2>
   <ol>
     <li><strong>Form DS-11</strong> filled out but <em>unsigned</em> — you sign in front of the acceptance agent.</li>
     <li><strong>Citizenship evidence</strong> (birth certificate or old passport) + a photocopy on plain paper.</li>
@@ -89,8 +109,16 @@ const crumbs = {"@context":"https://schema.org","@type":"BreadcrumbList","itemLi
     </div>
   </>}
 
+  <h2>Related guides</h2>
+  <div class="cols2">
+    <a class="row" href="/expedited-passport/"><h3><i class="fa-solid fa-bolt" style="color:var(--gold2)"></i> Expedited passport</h3><p class="sub">+$60 for 2-3 weeks, or same-day agency routes.</p></a>
+    <a class="row" href="/how-long-does-a-passport-take/"><h3><i class="fa-solid fa-hourglass-half" style="color:var(--gold2)"></i> Processing times</h3><p class="sub">Door-to-door timelines for every route.</p></a>
+    <a class="row" href="/passport-at-the-post-office/"><h3><i class="fa-solid fa-envelope" style="color:var(--gold2)"></i> Post office passports</h3><p class="sub">How the USPS system works, step by step.</p></a>
+    <a class="row" href="/walk-in-passport/"><h3><i class="fa-solid fa-person-walking" style="color:var(--gold2)"></i> Walk-in offices</h3><p class="sub">Where no appointment is needed.</p></a>
+  </div>
   <div class="src">Independent site, not affiliated with the State Department or USPS. Facility details come from the official public locator and can change — verify with the facility.</div>
 </main>
+<script>const d = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date().getDay()]; const r = document.querySelector(`tr[data-day="${d}"]`); if (r) { r.style.background = '#f5ecd7'; r.style.fontWeight = '700'; r.firstElementChild.textContent = d + ' (today)'; }</script>
 <script type="application/ld+json" set:html={JSON.stringify(schemaFaq)} />
 <script type="application/ld+json" set:html={JSON.stringify(crumbs)} />
 </Base>

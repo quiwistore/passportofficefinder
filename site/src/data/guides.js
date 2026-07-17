@@ -164,5 +164,32 @@ export const guides = [
       ['Can the post office expedite my passport?', 'It can accept an expedited application — check the +$60 option on your paperwork. Speed beyond that (14-day travel) requires an agency appointment.'],
       ['Do I pay USPS with a card?', 'Usually yes for the $35 execution fee and photos. The application fee must still be a check or money order to the State Department.']
     ]
+  }  ,
+  {
+    slug: 'talk-to-a-real-person',
+    title: 'Talk to a Real Person About Your Passport: The NPIC Phone Shortcut',
+    short: 'Talk to a real person',
+    icon: 'fa-headset',
+    hook: 'The passport line has a menu maze. Here is the path through it.',
+    quick: 'The National Passport Information Center (NPIC) is the only official phone line: 1-877-487-2778 (TDD 1-888-874-7793). Live agents handle status checks, urgent-travel appointments and general questions. To reach one: call during staffed hours (Mon-Fri roughly 8 AM to 10 PM ET, plus limited Saturday coverage; closed federal holidays), work through the menu, and choose the option to speak with a representative — for urgent travel within 14 days, follow the appointment prompts instead. Automated status info runs 24/7.',
+    desc: 'How to reach a live agent on the U.S. passport line (NPIC, 1-877-487-2778): staffed hours, which menu path to take, what agents can and cannot do, and faster alternatives for status checks.',
+    body: [
+      ['p', 'Every passport question funnels into one phone number, and the automated menu tries hard to keep you there. Knowing what agents can actually do — and when the robot is genuinely faster — saves the hold time.'],
+      ['h2', 'The number and the hours'],
+      ['ul', ['<strong>1-877-487-2778</strong> — National Passport Information Center (TDD <strong>1-888-874-7793</strong>).', 'Live agents: weekdays roughly <strong>8 AM to 10 PM Eastern</strong>, with limited Saturday service; closed on federal holidays.', 'Automated status line: 24/7 — have your last name, date of birth and SSN ready.']],
+      ['h2', 'Getting to a human'],
+      ['ol', ['Call during staffed hours — mid-week mornings have the shortest holds; Mondays and lunch hours the longest.', 'Listen past the status prompts: the menu offers a path to a <strong>representative</strong> after the automated options.', 'For travel within 14 days, take the <strong>urgent travel / appointment</strong> prompts instead — that queue books <a href="/regional-passport-agencies/">agency appointments</a> directly.', 'Life-or-death emergencies (travel within 72 hours) have their own prompt path, including after-hours coverage.']],
+      ['h2', 'What a live agent CAN do'],
+      ['ul', ['Check application status in more detail than the online tool.', 'Book, change or cancel <strong>regional agency appointments</strong> — free, and only available here.', 'Flag applications for upcoming travel dates.', 'Explain letters or requests for additional documents.']],
+      ['h2', 'What they CANNOT do'],
+      ['ul', ['Speed up processing beyond the official <a href="/expedited-passport/">expedite options</a>.', 'Take applications or payments over the phone.', 'Help with facility-specific questions — call the facility directly; every listing in <a href="/search/">our directory</a> has its direct number.']],
+      ['h2', 'Skip the call entirely when…'],
+      ['ul', ['<strong>Status:</strong> the online status tool updates as fast as agents see.', '<strong>Booking a post office slot:</strong> that is usps.com/scheduler, not the NPIC.', '<strong>General fee or process questions:</strong> our <a href="/passport-fees/">fee table</a> and <a href="/passport-appointment/">appointment guide</a> answer the common ones without hold music.']]
+    ],
+    faq: [
+      ['Why does the menu keep looping me to the automated status?', 'Status calls are the bulk of volume, so the menu front-loads them. Decline the automated offers and continue — the representative option comes after.'],
+      ['Is there a secret direct extension?', 'No. Sites selling "direct lines" resell the same public number. The urgent-travel prompts are the only legitimate fast lane, and only if you qualify.'],
+      ['Can I email instead?', 'The NPIC handles email inquiries with multi-day turnaround — fine for non-urgent questions, useless for travel deadlines. Phone remains the real-time channel.']
+    ]
   }
 ];
