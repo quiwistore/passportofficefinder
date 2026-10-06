@@ -1,6 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import facilities from '../../data/facilities.json';
+import ALLF from '../../data/facilities.json';
 export function getStaticPaths() {
   return facilities.map(f => ({ params: { slug: f.slug }, props: { f } }));
 }
@@ -19,7 +20,10 @@ const leads = [
 const lead = leads[hx % 6];
 const mapQ = encodeURIComponent(`${f.name}, ${addr}`);
 const near = facilities.filter(x => x.citySlug === f.citySlug && x.stateSlug === f.stateSlug && x.slug !== f.slug).slice(0, 5);
-const title = `${f.name} — Passport Acceptance Facility in ${f.city}, ${f.state}`;
+const __k = (x) => `${x.name}|${x.city}|${x.state}`;
+const __rep = ALLF.filter((x) => __k(x) === __k(f)).length > 1;
+const lugar = `${f.city}, ${f.state}` + (__rep && f.street ? ` (${f.street.replace(/\s+/g, ' ').trim()})` : '');
+const title = [`${f.name} — Passport Acceptance Facility in ${lugar}`, `${f.name} — Passport Office in ${lugar}`, `${f.name}, ${lugar}: Passports`, `${f.name}, ${lugar}`].find((x) => x.length <= 70) || `${f.name}, ${lugar}`;
 const desc = `${f.name} in ${f.city}, ${f.state}: phone ${f.phone}, address ${f.street}, hours, ${f.photoOnsite ? 'on-site passport photos, ' : ''}and how to apply. From the official State Department facility list.`;
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 const dayHours = DAYS.map(d => {
