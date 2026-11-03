@@ -3,7 +3,7 @@ import agencies from '../data/agencies.json';
 import { guides } from '../data/guides.js';
 const BASE = 'https://passportofficefinder.com';
 export function GET() {
-  const r = ['/', '/search/', '/regional-passport-agencies/', '/about/', '/contact/', '/privacy/'];
+  const r = ['/', '/search/', '/regional-passport-agencies/', '/about/', '/contact/', '/privacy/', '/terms/', '/cookies/'];
   for (const g of guides) r.push(`/${g.slug}/`);
   for (const a of agencies) r.push(`/agency/${a.slug}/`);
   const st = new Set(), ci = new Set();
